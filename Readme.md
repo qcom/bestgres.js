@@ -39,7 +39,7 @@ function updateXandY(data, cb) {
 }
 ```
 
-This is postgres transactions in node at its worst. Not only are we fighting manual error handling, but there is the fear that the majority of this code will be duplicated should another transaction database call be required. Control flow can of course be alleviated with [async](https://github.com/caolan/async) which will absolve us of our nested sins:
+This is postgres transactions in node at its worst! Not only are we fighting manual error handling, but there is the fear that the majority of this code will be duplicated should another transaction database call be required. Control flow can of course be alleviated with [async](https://github.com/caolan/async) which will absolve us of our nested sins:
 
 ```javascript
 function updateXandY(data, cb) {
@@ -53,7 +53,7 @@ function updateXandY(data, cb) {
 }
 ```
 
-Phew! A bit cleaner to be sure, but `updateXandY` still needs to be defined somewhere, and having to tirelessly instantiate a `new Transaction` plus manually begin the transaction and create a generic savepoint will grow old. How about:
+Phew! A bit cleaner to be sure, but `updateXandY` still needs to be defined somewhere, and having to tirelessly instantiate a new `Transaction` plus manually begin the transaction and create a generic savepoint will grow old. How about:
 
 ```javascript
 var updateXandY = bestgres.newTransactionMethod([
