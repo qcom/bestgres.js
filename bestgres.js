@@ -72,7 +72,7 @@ bestgres.guard = function(cb, options) {
 		rows : function(val) { return val ? val.rows : null; },
 		first : function(val) { return val ? val.rows[0] : null; },
 		count : function(val) { return val ? val.rowCount : null; },
-		propFirst : function(val) { return val ? val.rows[0][options.prop] : null; },
+		propFirst : function(val) { return val && val.rows[0] ? val.rows[0][options.prop] : null; },
 		pluck : function(val) { return val.rows.map(function(obj) { return obj[options.prop]; }); }
 	};
 	return function(err, result) {
