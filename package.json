@@ -1,6 +1,6 @@
 {
   "name": "bestgres",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A convenience library for postgres in node offering simpler transactions and helpers for creating a database api.",
   "main": "bestgres.js",
   "scripts": {
