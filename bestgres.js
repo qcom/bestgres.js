@@ -73,7 +73,12 @@ bestgres.guard = function(cb, options) {
 		first : function(val) { return val ? val.rows[0] : null; },
 		count : function(val) { return val ? val.rowCount : null; },
 		propFirst : function(val) { return val && val.rows[0] ? val.rows[0][options.prop] : null; },
-		pluck : function(val) { return val.rows.map(function(obj) { return obj[options.prop]; }); }
+		pluck : function(val) { return val.rows.map(function(obj) { return obj[options.prop]; }); },
+		dynatable : function(val) {
+			return val && val.rows[0]
+				? { records : val.rows, queryRecordCount : val.rows.length, totalRecordCount : val.rows[0].total_count }
+				: null;
+		}
 	};
 	return function(err, result) {
 		if (options.onlyErr) return cb(err);
