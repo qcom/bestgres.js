@@ -68,19 +68,25 @@ bestgres.newTransactionMethod = function() {
 /* wrap a callback in order to guard against property lookups on null */
 bestgres.guard = function(cb, options) {
 	options = options || { type : 'rows', onlyErr : false };
+	var prop = options.prop;
 	var handlers = {
 		rows : function(val) { return val ? val.rows : null; },
 		first : function(val) { return val ? val.rows[0] : null; },
 		count : function(val) { return val ? val.rowCount : null; },
-		propFirst : function(val) { return val && val.rows[0] ? val.rows[0][options.prop] : null; },
-		pluck : function(val) { return val.rows.map(function(obj) { return obj[options.prop]; }); },
+		propFirst : function(val) { return val && val.rows[0] ? val.rows[0][prop] : null; },
+		pluck : function(val) { return val.rows.map(function(obj) { return obj[prop]; }); },
 		dynatable : function(val) {
 			return val && val.rows[0]
 				? { records : val.rows, queryRecordCount : val.rows.length, totalRecordCount : val.rows[0].total_count }
 				: null;
 		},
 		autocomplete : function(val) {
-			return val && val.rows[0] ? { suggestions : val.rows } : null;
+			if (!val || !val.rows[0]) return { suggestions : [] };
+			return {
+				suggestions: !prop ? val.rows : val.rows.map(function(obj) {
+					return obj[prop];
+				})
+			};
 		}
 	};
 	return function(err, result) {
