@@ -78,6 +78,9 @@ bestgres.guard = function(cb, options) {
 			return val && val.rows[0]
 				? { records : val.rows, queryRecordCount : val.rows.length, totalRecordCount : val.rows[0].total_count }
 				: null;
+		},
+		autocomplete : function(val) {
+			return val && val.rows[0] ? { suggestions : val.rows } : null;
 		}
 	};
 	return function(err, result) {
