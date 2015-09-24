@@ -1,3 +1,5 @@
+'use strict';
+
 var Transaction = require('pg-transaction');
 var async = require('async');
 
@@ -62,6 +64,51 @@ bestgres.newTransactionMethod = function() {
 			.concat([function(result, cb) { cb(null, this.returnValue); }])
 			.map(function(fn) { return fn.bind(data); });
 		async.waterfall(fns, rollback(tx, callback));
+	};
+};
+
+bestgres.transaction = function() {
+	// transaction boilerplate
+	var tx = new Transaction(_client);
+	var preliminarySteps = [
+		function(cb) { tx.begin(cb); },
+		function(result, cb) { tx.savepoint('virgin', cb); }
+	];
+
+	// we're variadic, baby
+	let args = [].slice.call(arguments);
+
+	// arrays of steps can be passed, which will be concatenated, reduced, and waterfalled,
+	// before generating any extra steps with passed in functions
+	var passedSteps = args.filter((arg) => Array.isArray(arg)).reduce((memo, arr) => memo.concat(arr), []);
+	var generatorFns = args.filter((arg) => typeof arg === 'function');
+
+	return function(data, callback) {
+		// join the passed steps with the boilerplate and bind all to the data parameter
+		let steps = preliminarySteps.concat(passedSteps).map((fn) => fn.bind(data));
+
+		// execute all steps passed as arrays before executing any dynamic generator function results
+		async.waterfall(steps, function(err, result) {
+			if (err) return callback(err);
+
+			// bind all generator functions to the current value of the data parameter;
+			// the positioning of this step was the reason for the new method,
+			// as previously the data binding occurred too early; i.e. before any of the
+			// array-based steps had a chance to alter the communal payload
+			let dynamicSteps = generatorFns.map((fn) => fn.call(data)).reduce((memo, arr) => memo.concat(arr, []));
+
+			let _keepItMoving = function(cb) {
+				cb(null, null);
+			};
+
+			let _wrapItUp = function(result, cb) {
+				cb(null, this.returnValue);
+			};
+
+			let finalSteps = [_keepItMoving].concat(dynamicSteps).concat([_wrapItUp.bind(data)]);
+
+			async.waterfall(finalSteps, rollback(tx, callback));
+		});
 	};
 };
 
